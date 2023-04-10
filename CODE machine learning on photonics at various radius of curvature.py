@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  5 17:02:04 2023
+Created on Mon Apr 10 10:52:45 2023
 
 @author: limyu
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr  4 10:24:26 2023
-
-@author: limyu
-"""
 
 import tensorflow as tf
 import numpy as np
@@ -21,74 +15,91 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 from tensorflow.keras import layers
 
-df_main = pd.DataFrame()
-R = 15,20,40,50,60
-I = 0,1,2,4,5
-for r, i in zip(R, I):
-    url = "https://raw.githubusercontent.com/yd145763/Beam-Profile-with-ML/main/grating012umpitch05dutycycle"+str(r)+"um.csv"
-    df = pd.read_csv(url)
-    df = df.iloc[80:, :]
-    
-    def strip(s):
-        return s.strip('[]')
-    def split(s):
-        return s.split(',')
+
+R = 15,20,30,40,50,60
+I = 0,1,2,3,4,5
+R_training = 15,20,40,50,60
+I_training = 0,1,2,4,5
+R_actual = 30
+I_actual = 3
+
+def get_df(R, I):
+    df_name = pd.DataFrame()
+    for r, i in zip(R, I):
+        url = "https://raw.githubusercontent.com/yd145763/Beam-Profile-with-ML/main/grating012umpitch05dutycycle"+str(r)+"um.csv"
+        df = pd.read_csv(url)
+        df = df.iloc[80:, :]
         
-    def float_list(str_list):
-        return list(map(float, str_list))
+        def strip(s):
+            return s.strip('[]')
+        def split(s):
+            return s.split(',')
+            
+        def float_list(str_list):
+            return list(map(float, str_list))
+        
+        def count(s):
+            return len(s)
+        
+        def std_dev(s):
+            return np.std(s)
+        
+        df['horizontal_positions'] = df['horizontal_positions'].apply(strip)
+        df['horizontal_positions'] = df['horizontal_positions'].apply(split)   
+        df['horizontal_positions'] = df['horizontal_positions'].apply(float_list)
+        
+        df['horizontal_peaks'] = df['horizontal_peaks'].apply(strip)
+        df['horizontal_peaks'] = df['horizontal_peaks'].apply(split)   
+        df['horizontal_peaks'] = df['horizontal_peaks'].apply(float_list)
+        
+        df["horizontal_count"] = df['horizontal_positions'].apply(count)
+        df["horizontal_std"] = df['horizontal_positions'].apply(std_dev)
     
-    def count(s):
-        return len(s)
+        df['verticle_positions'] = df['verticle_positions'].apply(strip)
+        df['verticle_positions'] = df['verticle_positions'].apply(split)   
+        df['verticle_positions'] = df['verticle_positions'].apply(float_list)
+        
+        df['verticle_peaks'] = df['verticle_peaks'].apply(strip)
+        df['verticle_peaks'] = df['verticle_peaks'].apply(split)   
+        df['verticle_peaks'] = df['verticle_peaks'].apply(float_list)
     
-    def std_dev(s):
-        return np.std(s)
+        df["verticle_count"] = df['verticle_positions'].apply(count)
+        df["verticle_std"] = df['verticle_positions'].apply(std_dev)
     
-    df['horizontal_positions'] = df['horizontal_positions'].apply(strip)
-    df['horizontal_positions'] = df['horizontal_positions'].apply(split)   
-    df['horizontal_positions'] = df['horizontal_positions'].apply(float_list)
-    
-    df['horizontal_peaks'] = df['horizontal_peaks'].apply(strip)
-    df['horizontal_peaks'] = df['horizontal_peaks'].apply(split)   
-    df['horizontal_peaks'] = df['horizontal_peaks'].apply(float_list)
-    
-    df["horizontal_count"] = df['horizontal_positions'].apply(count)
-    df["horizontal_std"] = df['horizontal_positions'].apply(std_dev)
+        df=df.assign(Radius=r)
+        
+        df['horizontal_half'] = [i*1000000 for i in df['horizontal_half']]
+        df['verticle_half'] = [i*1000000 for i in df['verticle_half']]
+        
+        df_name = pd.concat([df_name, df], axis= 0)
+    return df_name
 
-    df['verticle_positions'] = df['verticle_positions'].apply(strip)
-    df['verticle_positions'] = df['verticle_positions'].apply(split)   
-    df['verticle_positions'] = df['verticle_positions'].apply(float_list)
-    
-    df['verticle_peaks'] = df['verticle_peaks'].apply(strip)
-    df['verticle_peaks'] = df['verticle_peaks'].apply(split)   
-    df['verticle_peaks'] = df['verticle_peaks'].apply(float_list)
 
-    df["verticle_count"] = df['verticle_positions'].apply(count)
-    df["verticle_std"] = df['verticle_positions'].apply(std_dev)
-
-    df=df.assign(Radius=r)
-    
-    df['horizontal_half'] = [i*1000000 for i in df['horizontal_half']]
-    df['verticle_half'] = [i*1000000 for i in df['verticle_half']]
-    
-    df_main = pd.concat([df_main, df], axis= 0)
-
-print(df_main.columns)
+df_main = get_df(R, I)
+df_training = get_df(R_training, I_training)
 
 col_feature = ['Radius', 'z', 'horizontal_count', 'horizontal_std', 'verticle_count', 'verticle_std']
-
-df1_norm = df_main[col_feature]
+df_main_fea = df_main[col_feature]
+df_actual_fea = df_main_fea[df_main_fea['Radius'] ==30]
 
 # create a MinMaxScaler object
 scaler = MinMaxScaler()
-#df2_norm = pd.DataFrame(scaler.fit_transform(df1_norm), columns=df1_norm.columns)
-df_feature = df1_norm 
+df_main_fea_norm = pd.DataFrame(scaler.fit_transform(df_main_fea), columns=df_main_fea.columns)
+df_actual_fea_norm =  df_main_fea_norm[df_main_fea_norm['Radius'] == df_main_fea_norm.iloc[500,0]]
+df_training_fea_norm =  df_main_fea_norm[df_main_fea_norm['Radius'] != df_main_fea_norm.iloc[500,0]]
 
-col_label = ['horizontal_full', 'verticle_full']
 
-df_label = df_main[col_label]
+col_label = ['Radius', 'horizontal_full', 'verticle_full']
+df_main_label = df_main[col_label]
 
-X = df_feature
-y = df_label
+df_main_label_norm = pd.DataFrame(scaler.fit_transform(df_main_label), columns=df_main_label.columns)
+df_actual_label_norm =  df_main_label_norm[df_main_label_norm['Radius'] == df_main_label_norm.iloc[500,0]]
+df_training_label_norm =  df_main_label_norm[df_main_label_norm['Radius'] != df_main_label_norm.iloc[500,0]]
+df_training_label_norm = df_training_label_norm.iloc[:, 1:]
+
+
+X = df_training_fea_norm
+y = df_training_label_norm
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
@@ -147,47 +158,16 @@ loss, mae = model.evaluate(X_test, y_test)
 print('Mean Absolute Error:', mae)
 
 
-
-url_predict = "https://raw.githubusercontent.com/yd145763/Beam-Profile-with-ML/main/grating012umpitch05dutycycle30um.csv"
-df_predict = pd.read_csv(url_predict)
-df_predict = df_predict.iloc[80:, :]
-df_predict=df_predict.assign(Radius=30)
-df_predict['horizontal_positions'] = df_predict['horizontal_positions'].apply(strip)
-df_predict['horizontal_positions'] = df_predict['horizontal_positions'].apply(split)   
-df_predict['horizontal_positions'] = df_predict['horizontal_positions'].apply(float_list)
-
-df_predict['horizontal_peaks'] = df_predict['horizontal_peaks'].apply(strip)
-df_predict['horizontal_peaks'] = df_predict['horizontal_peaks'].apply(split)   
-df_predict['horizontal_peaks'] = df_predict['horizontal_peaks'].apply(float_list)
-
-df_predict["horizontal_count"] = df_predict['horizontal_positions'].apply(count)
-df_predict["horizontal_std"] = df_predict['horizontal_positions'].apply(std_dev)
-
-df_predict['verticle_positions'] = df_predict['verticle_positions'].apply(strip)
-df_predict['verticle_positions'] = df_predict['verticle_positions'].apply(split)   
-df_predict['verticle_positions'] = df_predict['verticle_positions'].apply(float_list)
-
-df_predict['verticle_peaks'] = df_predict['verticle_peaks'].apply(strip)
-df_predict['verticle_peaks'] = df_predict['verticle_peaks'].apply(split)   
-df_predict['verticle_peaks'] = df_predict['verticle_peaks'].apply(float_list)
-
-df_predict["verticle_count"] = df_predict['verticle_positions'].apply(count)
-df_predict["verticle_std"] = df_predict['verticle_positions'].apply(std_dev)
-df_predict['horizontal_half'] = [i*1000000 for i in df_predict['horizontal_half']]
-df_predict['verticle_half'] = [i*1000000 for i in df_predict['verticle_half']]
-
-column_predict = col_feature
-X_predict = df_predict[column_predict]
-#X_predict = pd.DataFrame(scaler.fit_transform(X_predict), columns=X_predict.columns)
+X_predict = df_actual_fea_norm
 
 predictions2 = model2.predict(X_predict)
 
 print(predictions2[:,0])
-z = [i*1000000 for i in df_predict['z']]
+z = [i*1000000 for i in df_actual_fea['z']]
 from matplotlib.ticker import StrMethodFormatter
 fig = plt.figure(figsize=(7, 4))
 ax = plt.axes()
-ax.scatter(z, df_predict['horizontal_full'])
+ax.scatter(z, df_actual_label_norm['horizontal_full'])
 ax.scatter(z, predictions2[:,0])
 #graph formatting     
 ax.tick_params(which='major', width=2.00)
@@ -199,15 +179,15 @@ ax.yaxis.label.set_weight("bold")
 ax.tick_params(axis='both', which='major', labelsize=15)
 ax.set_yticklabels(ax.get_yticks(), weight='bold')
 ax.set_xticklabels(ax.get_xticks(), weight='bold')
-ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
+ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
 ax.spines['bottom'].set_linewidth(2)
 ax.spines['left'].set_linewidth(2)
 plt.xlabel("Height from grating (µm)")
-plt.ylabel("Beam Waist")
+plt.ylabel("Normalized Horizontal Beam Waist")
 plt.legend(["Original Data", "Predicted Data"], prop={'weight': 'bold','size': 10}, loc = "upper left")
-plt.title("Horizontal Beam Waist", fontweight = 'bold')
+plt.title("Normalized Horizontal Beam Waist", fontweight = 'bold')
 plt.show()
 plt.close()
 
@@ -215,7 +195,7 @@ predictions = model.predict(X_predict)
 
 fig = plt.figure(figsize=(7, 4))
 ax = plt.axes()
-ax.scatter(z, df_predict['verticle_full'])
+ax.scatter(z, df_actual_label_norm['verticle_full'])
 ax.scatter(z, predictions[:,1])
 #graph formatting     
 ax.tick_params(which='major', width=2.00)
@@ -227,14 +207,14 @@ ax.yaxis.label.set_weight("bold")
 ax.tick_params(axis='both', which='major', labelsize=15)
 ax.set_yticklabels(ax.get_yticks(), weight='bold')
 ax.set_xticklabels(ax.get_xticks(), weight='bold')
-ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
+ax.yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}'))
 ax.spines["right"].set_visible(False)
 ax.spines["top"].set_visible(False)
 ax.spines['bottom'].set_linewidth(2)
 ax.spines['left'].set_linewidth(2)
 plt.xlabel("Height from grating (µm)")
-plt.ylabel("Beam Waist")
+plt.ylabel("Normalized Vertical Beam Waist")
 plt.legend(["Original Data", "Predicted Data"], prop={'weight': 'bold','size': 10}, loc = "upper left")
-plt.title("Vertical Beam Waist", fontweight = 'bold')
+plt.title("Normalized Vertical Beam Waist", fontweight = 'bold')
 plt.show()
 plt.close()
