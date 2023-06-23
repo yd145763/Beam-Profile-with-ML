@@ -85,7 +85,7 @@ def get_df(R, I):
 
 df_main = get_df(R, I)
 
-labels = ['verticle_full', 'verticle_half']
+labels = ['horizontal_full', 'verticle_half']
 
 for label in labels:
     max_label = max(df_main[label])
@@ -131,8 +131,9 @@ for label in labels:
     layers1=[]
     ape_list = []
     train_test_ape = []
-    dense_layers = [1,2,4,5,6,8,10,12]
-    layer_sizes = [4,8,10,20,50,150,250]
+    RMS = []
+    dense_layers = [1,2,3,4,5,6,8]
+    layer_sizes = [2,4,6,8,10,15,20]
     num_epochs = 100
     s = 10
     
@@ -150,9 +151,6 @@ for label in labels:
             model = Sequential()
             model.add(Dense(len(X_train.keys()),  input_shape=[len(X_train.keys())]))
             for _ in range(dense_layer):
-                if layer_size <= 5:
-                    break
-                else:
                     model.add(Dense(layer_size))
                     model.add(Activation('elu'))
                     #layer_size = int(round(layer_size*0.9, 0))
@@ -175,8 +173,10 @@ for label in labels:
             
             training_loss = pd.Series(history.history['loss'])
             validation_loss = pd.Series(history.history['val_loss'])
+            rms = np.sqrt(np.mean(validation_loss[50:] ** 2))
+            RMS.append(rms)
             
-            diff = (validation_loss - training_loss)
+            diff = (validation_loss - training_loss).abs()
             rel_error = diff / training_loss
             pct_error = rel_error * 100
             ape = pct_error.mean()
@@ -216,7 +216,7 @@ for label in labels:
             predictions = model.predict(X_predict)
             
             pred_label_denorm = [(i*(max_label-min_label))+min_label for i in predictions[:,0]]
-            actual_label_denorm = df_main[df_main["Radius"] == R_actual[R_index]]["horizontal_full"]
+            actual_label_denorm = df_main[df_main["Radius"] == R_actual[R_index]][label]
             
     
             df_actual_fea_filtered = df_actual_fea[df_actual_fea["Radius"]==R_actual[R_index]]
@@ -267,12 +267,50 @@ for label in labels:
         df_mae["number of nodes first layer"] = nodes
         df_mae["ape_list"] = ape_list
         df_mae["train_test_ape"] = train_test_ape
+        df_mae["RMS"] = RMS
+        L_no_overfit = []
+        N_no_overfit = []
+        ape_no_overfit = []
+        
+        # Given percentile
+        percentile = 20
+    
+        # Calculate the cutoff value
+        cutoff_value_fitting = np.percentile(df_mae['train_test_ape'], percentile)
+        cutoff_value_rms = np.percentile(df_mae['RMS'], percentile)
+        for index, row in df_mae.iterrows():
+        # Check if the value in column A (assuming it's named 'X') is less than 5
+            if row['train_test_ape'] < cutoff_value_fitting and row['RMS'] < cutoff_value_rms:
+    
+                print(row['number of layers'], row['number of nodes first layer'], row["ape_list"])
+                L_no_overfit.append(row['number of layers'])
+                N_no_overfit.append(row['number of nodes first layer'])
+                ape_no_overfit.append(row["ape_list"])
+        df_no_overfit = pd.DataFrame()
+        df_no_overfit["L_no_overfit"] = L_no_overfit
+        df_no_overfit["N_no_overfit"] = N_no_overfit
+        df_no_overfit["ape_no_overfit"] = ape_no_overfit
+        
+        
     
     plt.plot(df_mae["mae"])
     plt.show()
     
     import seaborn as sns
-
+    mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_list')
+    fig, ax = plt.subplots()
+    ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+    ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+    sns.heatmap(mat, annot=True, cmap='hot', annot_kws={"fontsize":10, "fontweight":"bold"}, fmt=".1f")
+    cbar = ax.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+    for t in cbar.ax.get_yticklabels():
+        t.set_fontweight("bold")
+    cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+    font = {'color': 'black', 'weight': 'bold', 'size': 12}
+    ax.set_ylabel("Number of Layers, L", fontdict=font)
+    ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+    ax.tick_params(axis='both', labelsize=12, weight='bold')
     
     mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'train_test_ape')
     fig, ax = plt.subplots()
@@ -290,7 +328,20 @@ for label in labels:
     ax.tick_params(axis='both', labelsize=12, weight='bold')
     
     
-    
+    mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'RMS')
+    fig, ax = plt.subplots()
+    ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+    ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+    sns.heatmap(mat, annot=True, cmap='hot', annot_kws={"fontsize":10, "fontweight":"bold"}, fmt=".4f")
+    cbar = ax.collections[0].colorbar
+    cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+    for t in cbar.ax.get_yticklabels():
+        t.set_fontweight("bold")
+    cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+    font = {'color': 'black', 'weight': 'bold', 'size': 12}
+    ax.set_ylabel("Number of Layers, L", fontdict=font)
+    ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+    ax.tick_params(axis='both', labelsize=12, weight='bold')
     
     
     
