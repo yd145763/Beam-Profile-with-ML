@@ -85,7 +85,7 @@ def get_df(R, I):
 
 df_main = get_df(R, I)
 
-labels = ['horizontal_full', 'verticle_half']
+labels = ['max_field_list', 'verticle_half']
 
 for label in labels:
     max_label = max(df_main[label])
