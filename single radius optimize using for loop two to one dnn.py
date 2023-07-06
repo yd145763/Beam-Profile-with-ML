@@ -85,7 +85,7 @@ def get_df(R, I):
 df_main = get_df(R, I)
 print(df_main.columns)
 
-labels = ['max_field_list', 'verticle_half']
+labels = ['verticle_mse_list', 'verticle_half']
 
 for label in labels:
 
