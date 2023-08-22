@@ -386,15 +386,146 @@ df_mae["ape_actual_max_field_list"] = ape_actual_max_field_list
 df_mae["train_test_ape"] = train_test_ape
 df_mae["Run"] = Run
 
+df_mae['font'] = df_mae.apply(lambda row: 12 if row['number of layers'] == row['Run'] else 8, axis=1)
+df_mae['weight'] = df_mae.apply(lambda row: 'bold' if row['number of layers'] == row['Run'] else 'normal', axis=1)
+
+
+
 plt.plot(df_mae["mae"])
 plt.show()
 
+font_sizes = [float(i) for i in df_mae['font']]
+font_weights = [i for i in df_mae['weight']]
 import seaborn as sns
+
 mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_ver')
+mat_list = mat.values.tolist()
+
+plt.figure(figsize=(6, 4))
+ax = sns.heatmap(mat_list, annot=True, cmap='rainbow', fmt=".1f")
+
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+#ax.tick_params(axis='both', labelsize=12, weight='bold')
+for i, text in enumerate(ax.texts):
+    text.set_fontsize(font_sizes[i])
+for i, text in enumerate(ax.texts):
+    text.set_fontweight(font_weights[i])
+plt.show()
+plt.close()
+
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_hor')
+mat_list = mat.values.tolist()
+
+plt.figure(figsize=(6, 4))
+ax = sns.heatmap(mat_list, annot=True, cmap='rainbow', fmt=".1f")
+
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+#ax.tick_params(axis='both', labelsize=12, weight='bold')
+for i, text in enumerate(ax.texts):
+    text.set_fontsize(font_sizes[i])
+for i, text in enumerate(ax.texts):
+    text.set_fontweight(font_weights[i])
+plt.show()
+plt.close()
+
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_max_field_list')
+mat_list = mat.values.tolist()
+
+plt.figure(figsize=(6, 4))
+ax = sns.heatmap(mat_list, annot=True, cmap='rainbow', fmt=".1f")
+
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+#ax.tick_params(axis='both', labelsize=12, weight='bold')
+for i, text in enumerate(ax.texts):
+    text.set_fontsize(font_sizes[i])
+for i, text in enumerate(ax.texts):
+    text.set_fontweight(font_weights[i])
+plt.show()
+plt.close()
+
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'train_test_ape')
+mat_list = mat.values.tolist()
+
+plt.figure(figsize=(6, 4))
+ax = sns.heatmap(mat_list, annot=True, cmap='rainbow', fmt=".1f")
+
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+#ax.tick_params(axis='both', labelsize=12, weight='bold')
+for i, text in enumerate(ax.texts):
+    text.set_fontsize(font_sizes[i])
+for i, text in enumerate(ax.texts):
+    text.set_fontweight(font_weights[i])
+plt.show()
+plt.close()
+
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'Run')
+mat_list = mat.values.tolist()
+
+plt.figure(figsize=(6, 4))
+ax = sns.heatmap(mat_list, annot=True, cmap='rainbow', fmt=".1f")
+
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Average\nPercentage\nError (%)", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+#ax.tick_params(axis='both', labelsize=12, weight='bold')
+for i, text in enumerate(ax.texts):
+    text.set_fontsize(font_sizes[i])
+for i, text in enumerate(ax.texts):
+    text.set_fontweight(font_weights[i])
+plt.show()
+plt.close()
+
+"""
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_ver')
+font_sizes = df_mae['font'].values.reshape(mat.shape)
+
 fig, ax = plt.subplots()
 ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
 ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
-sns.heatmap(mat, annot=True, cmap='rainbow', annot_kws={"fontsize":10, "fontweight":"bold"}, fmt=".1f")
+sns.heatmap(mat, annot=True, cmap='rainbow', annot_kws={"fontsize": 10, "fontweight": "bold"}, fmt=".1f")
 cbar = ax.collections[0].colorbar
 cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
 for t in cbar.ax.get_yticklabels():
@@ -404,6 +535,13 @@ font = {'color': 'black', 'weight': 'bold', 'size': 12}
 ax.set_ylabel("Number of Layers, L", fontdict=font)
 ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
 ax.tick_params(axis='both', labelsize=12, weight='bold')
+
+plt.show()
+plt.close()
+
+
+
+
 
 
 mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_hor')
@@ -420,6 +558,8 @@ font = {'color': 'black', 'weight': 'bold', 'size': 12}
 ax.set_ylabel("Number of Layers, L", fontdict=font)
 ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
 ax.tick_params(axis='both', labelsize=12, weight='bold')
+plt.show()
+plt.close()
 
 mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'ape_actual_max_field_list')
 fig, ax = plt.subplots()
@@ -435,6 +575,8 @@ font = {'color': 'black', 'weight': 'bold', 'size': 12}
 ax.set_ylabel("Number of Layers, L", fontdict=font)
 ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
 ax.tick_params(axis='both', labelsize=12, weight='bold')
+plt.show()
+plt.close()
 
 mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'train_test_ape')
 fig, ax = plt.subplots()
@@ -450,9 +592,26 @@ font = {'color': 'black', 'weight': 'bold', 'size': 12}
 ax.set_ylabel("Number of Layers, L", fontdict=font)
 ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
 ax.tick_params(axis='both', labelsize=12, weight='bold')
+plt.show()
+plt.close()
 
-
-
+mat = df_mae.pivot('number of layers', 'number of nodes first layer', 'Run')
+fig, ax = plt.subplots()
+ax.set_xticklabels(ax.get_xticklabels(), fontweight="bold", fontsize = 12)
+ax.set_yticklabels(ax.get_yticklabels(), fontweight="bold", fontsize = 12)
+sns.heatmap(mat, annot=True, cmap='rainbow', annot_kws={"fontsize":10, "fontweight":"bold"}, fmt=".0f")
+cbar = ax.collections[0].colorbar
+cbar.ax.tick_params(labelsize=12, width=2, length=6, pad=10, direction="out", colors="black", labelcolor="black")
+for t in cbar.ax.get_yticklabels():
+    t.set_fontweight("bold")
+cbar.ax.set_title("Actual Number\nof Layers", fontweight="bold")
+font = {'color': 'black', 'weight': 'bold', 'size': 12}
+ax.set_ylabel("Number of Layers, L", fontdict=font)
+ax.set_xlabel("Number of Nodes, N\n(First Layer)", fontdict=font)
+ax.tick_params(axis='both', labelsize=12, weight='bold')
+plt.show()
+plt.close()
+"""
 
 
 
